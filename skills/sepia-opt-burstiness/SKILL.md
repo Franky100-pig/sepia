@@ -7,6 +7,8 @@ metadata:
   ask-before-load: true
 ---
 
+**STOP — THIS SKILL IS DISABLED BY DEFAULT.** Do not perform any operation here unless the user has *explicitly* enabled it in this conversation. If you are unsure whether it was enabled, do nothing and say so instead of guessing.
+
 > ⚠️ **OPTIONAL SKILL — ASK BEFORE USING.**
 > This skill is **not** part of core sepia and is **not** loaded by default.
 > Before you apply any of its operations, you **MUST** ask the user:
