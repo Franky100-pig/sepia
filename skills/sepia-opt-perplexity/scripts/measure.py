@@ -25,6 +25,7 @@ COMMON = set(
 
 
 def read_text(path):
+    """Read input text from a file path, or fall back to stdin when no path is given."""
     if path:
         with open(path, encoding="utf-8") as f:
             return f.read()
@@ -32,10 +33,12 @@ def read_text(path):
 
 
 def words(text):
+    """Tokenize text into lowercased word tokens, stripping punctuation."""
     return [w.lower() for w in re.findall(r"[a-z']+", text.lower())]
 
 
 def analyze(text):
+    """Estimate lexical surprise via TTR, rare-word ratio, and char-bigram entropy; return a band."""
     toks = words(text)
     n = len(toks)
     if n == 0:
@@ -69,6 +72,7 @@ def analyze(text):
 
 
 def main():
+    """CLI entry point: read from a file argument or stdin and print the JSON analysis."""
     text = read_text(sys.argv[1] if len(sys.argv) > 1 else None)
     print(json.dumps(analyze(text), indent=2, ensure_ascii=False))
 

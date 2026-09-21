@@ -14,6 +14,7 @@ import statistics
 
 
 def read_text(path):
+    """Read input text from a file path, or fall back to stdin when no path is given."""
     if path:
         with open(path, encoding="utf-8") as f:
             return f.read()
@@ -21,15 +22,18 @@ def read_text(path):
 
 
 def sentences(text):
+    """Split text into sentences on sentence-ending punctuation followed by whitespace."""
     parts = re.split(r"(?<=[.!?])\s+", text.strip())
     return [p for p in parts if p.strip()]
 
 
 def words_of(s):
+    """Return the list of alphanumeric word tokens found in a single sentence string."""
     return re.findall(r"[A-Za-z0-9']+", s)
 
 
 def analyze(text):
+    """Compute burstiness metrics (CV, alternation) and a human/mechanical band for the text."""
     sents = sentences(text)
     lengths = [len(words_of(s)) for s in sents if words_of(s)]
     n = len(lengths)
@@ -59,6 +63,7 @@ def analyze(text):
 
 
 def main():
+    """CLI entry point: read from a file argument or stdin and print the JSON analysis."""
     text = read_text(sys.argv[1] if len(sys.argv) > 1 else None)
     print(json.dumps(analyze(text), indent=2, ensure_ascii=False))
 
