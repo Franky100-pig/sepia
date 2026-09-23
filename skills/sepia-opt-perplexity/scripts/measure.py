@@ -55,7 +55,10 @@ def analyze(text):
         H = -sum((c / total) * math.log2(c / total) for c in cnt.values())
     else:
         H = 0.0
-    if ttr < 0.35 or rare_ratio < 0.45:
+    min_tokens = 5
+    if n < min_tokens:
+        band = "insufficient sample (need >=%d tokens) - metrics only" % min_tokens
+    elif ttr < 0.35 or rare_ratio < 0.45:
         band = "low lexical variety - may read as over-smooth"
     elif ttr > 0.8:
         band = "high lexical variety - watch readability"

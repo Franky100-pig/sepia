@@ -22,10 +22,40 @@ def read_text(path):
     return sys.stdin.read()
 
 
+ABBREVIATIONS = {
+    "dr", "mr", "mrs", "ms", "prof", "sr", "jr", "st", "vs", "etc",
+    "inc", "ltd", "co", "e.g", "i.e", "a.m", "p.m", "u.s.a",
+}
+
+
+def _is_abbreviation(segment):
+    """Return True when the last word of a split segment is a known English abbreviation."""
+    words = segment.rstrip().split()
+    if not words:
+        return False
+    last = words[-1]
+    if not last.endswith("."):
+        return False
+    core = last[:-1].lower()
+    if core in ABBREVIATIONS:
+        return True
+    # single capital letter (e.g. "U.") or all-caps acronym with periods ("U.S.A.")
+    if re.fullmatch(r"[A-Z]\.", core) or re.fullmatch(r"([A-Z]\.)+", core):
+        return True
+    return False
+
+
 def sentences(text):
-    """Split text into sentences on sentence-ending punctuation followed by whitespace."""
-    parts = re.split(r"(?<=[.!?])\s+", text.strip())
-    return [p for p in parts if p.strip()]
+    """Split text into sentences, keeping abbreviation periods (e.g. 'Dr.') inside one sentence."""
+    parts = re.split(r"(?<=[.!?])\s+|(?<=[.!?])(?=\")", text.strip())
+    parts = [p for p in parts if p.strip()]
+    merged = []
+    for seg in parts:
+        if merged and _is_abbreviation(merged[-1]):
+            merged[-1] = merged[-1] + " " + seg
+        else:
+            merged.append(seg)
+    return merged
 
 
 def words_of(s):
@@ -49,7 +79,9 @@ def analyze(text):
     cv = sd / mean if mean else 0.0
     diffs = [abs(lengths[i] - lengths[i - 1]) for i in range(1, n)]
     alt = statistics.mean(diffs) / mean if mean else 0.0
-    if cv < 0.45:
+    if n <= 2:
+        band = "limited sample (<=2 sentences) - variation needs >=3 sentences"
+    elif cv < 0.45:
         band = "uniform - low sentence-length variation"
     elif cv > 1.1:
         band = "highly variable - watch readability"
