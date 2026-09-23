@@ -28,8 +28,14 @@ ABBREVIATIONS = {
 }
 
 
-def _is_abbreviation(segment):
-    """Return True when the last word of a split segment is a known English abbreviation."""
+def _is_short_abbrev_segment(segment):
+    """Return True for a short (<=3 word) segment ending in a recognized abbreviation.
+
+    A short segment such as "Dr." or "He met Mr." is treated as the start of a
+    sentence whose abbreviation attaches to the next segment ("Dr. Smith"). Longer
+    segments ending in an abbreviation (e.g. "I live in the U.S.A.") are left alone
+    so a following sentence keeps its own boundary.
+    """
     words = segment.rstrip().split()
     if not words:
         return False
@@ -37,12 +43,13 @@ def _is_abbreviation(segment):
     if not last.endswith("."):
         return False
     core = last[:-1].lower()
-    if core in ABBREVIATIONS:
-        return True
-    # single capital letter (e.g. "U.") or all-caps acronym with periods ("U.S.A.")
-    if re.fullmatch(r"[A-Z]\.", core) or re.fullmatch(r"([A-Z]\.)+", core):
-        return True
-    return False
+    if core not in ABBREVIATIONS:
+        # single capital letter (e.g. "U.") or all-caps acronym with periods ("U.S.A.")
+        if not (
+            re.fullmatch(r"[A-Z]\.", core) or re.fullmatch(r"([A-Z]\.)+", core)
+        ):
+            return False
+    return len(words) <= 3
 
 
 def sentences(text):
@@ -51,7 +58,7 @@ def sentences(text):
     parts = [p for p in parts if p.strip()]
     merged = []
     for seg in parts:
-        if merged and _is_abbreviation(merged[-1]):
+        if merged and _is_short_abbrev_segment(merged[-1]):
             merged[-1] = merged[-1] + " " + seg
         else:
             merged.append(seg)

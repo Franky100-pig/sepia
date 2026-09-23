@@ -87,6 +87,16 @@ class BurstinessTests(unittest.TestCase):
         self.assertIn("error", out)
         self.assertIn(">=2 sentences", out["error"])
 
+    def test_abbreviation_at_sentence_end_preserves_boundary(self):
+        """A real sentence ending in an abbreviation (e.g. 'U.S.A.') must not swallow the next sentence."""
+        out = burst_measure.analyze("I live in the U.S.A. Today I leave.")
+        self.assertEqual(out["sentences"], 2)
+
+    def test_mid_sentence_abbreviation_merges(self):
+        """A short segment ending in an abbreviation continues the same sentence (e.g. 'He met Mr. Smith.')."""
+        out = burst_measure.analyze("He met Mr. Smith. They left.")
+        self.assertEqual(out["sentences"], 2)
+
     def test_two_sentence_extreme_not_highly_variable(self):
         """A two-sentence extreme ratio cannot be called 'highly variable'; the band is withheld."""
         out = burst_measure.analyze(
