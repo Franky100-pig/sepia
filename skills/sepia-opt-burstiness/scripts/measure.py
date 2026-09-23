@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Burstiness diagnostic for the optional sepia-opt-burstiness skill.
 
-Standard library only. Reports sentence-length statistics that approximate the
-"burstiness" axis GPTZero-style detectors use:
+Standard library only. Reports sentence-length statistics as an editorial
+rhythm signal:
   - CV (coefficient of variation) of sentence word-counts
   - an alternation index (mean adjacent length difference / mean)
-Human prose typically sits around CV 0.45-1.1; very low CV reads mechanical.
+Human prose typically varies more than uniform machine text; the reported
+bands are descriptive, not validated thresholds. English prose only.
 """
 import sys
 import re
@@ -33,23 +34,27 @@ def words_of(s):
 
 
 def analyze(text):
-    """Compute burstiness metrics (CV, alternation) and a human/mechanical band for the text."""
+    """Compute burstiness metrics (CV, alternation) and a descriptive variation assessment."""
     sents = sentences(text)
     lengths = [len(words_of(s)) for s in sents if words_of(s)]
     n = len(lengths)
     if n < 2:
-        return {"sentences": n, "error": "need >=2 sentences to measure burstiness"}
+        return {
+            "sentences": n,
+            "error": "need >=2 sentences to measure burstiness",
+            "language_scope": "english-prose-only",
+        }
     mean = statistics.mean(lengths)
     sd = statistics.pstdev(lengths)
     cv = sd / mean if mean else 0.0
     diffs = [abs(lengths[i] - lengths[i - 1]) for i in range(1, n)]
     alt = statistics.mean(diffs) / mean if mean else 0.0
     if cv < 0.45:
-        band = "too uniform (mechanical) — raise variation"
+        band = "uniform - low sentence-length variation"
     elif cv > 1.1:
-        band = "highly variable — usually fine, watch readability"
+        band = "highly variable - watch readability"
     else:
-        band = "human-like band"
+        band = "moderate variation"
     return {
         "sentences": n,
         "mean_len": round(mean, 2),
@@ -59,6 +64,7 @@ def analyze(text):
         "min": min(lengths),
         "max": max(lengths),
         "band": band,
+        "language_scope": "english-prose-only",
     }
 
 

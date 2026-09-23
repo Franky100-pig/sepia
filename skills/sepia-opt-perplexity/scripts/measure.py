@@ -6,7 +6,7 @@ Standard library only. Estimates lexical "surprise" with stylometric proxies
   - type-token ratio (TTR)
   - rare-word ratio vs. a small common-English list
   - character-bigram self-entropy (bits)
-Directional only; do not treat as an exact perplexity score.
+Directional only; do not treat as an exact perplexity score. English prose only.
 """
 import sys
 import re
@@ -38,11 +38,11 @@ def words(text):
 
 
 def analyze(text):
-    """Estimate lexical surprise via TTR, rare-word ratio, and char-bigram entropy; return a band."""
+    """Estimate lexical surprise via TTR, rare-word ratio, and char-bigram entropy; return a descriptive assessment."""
     toks = words(text)
     n = len(toks)
     if n == 0:
-        return {"error": "empty text"}
+        return {"error": "empty text", "language_scope": "english-prose-only"}
     types = set(toks)
     ttr = len(types) / n
     rare = [w for w in toks if w not in COMMON]
@@ -56,17 +56,18 @@ def analyze(text):
     else:
         H = 0.0
     if ttr < 0.35 or rare_ratio < 0.45:
-        band = "check — low lexical variety may read as over-smooth"
+        band = "low lexical variety - may read as over-smooth"
     elif ttr > 0.8:
-        band = "high lexical variety (usually good; watch readability)"
+        band = "high lexical variety - watch readability"
     else:
-        band = "human-like band"
+        band = "moderate lexical variety"
     return {
         "tokens": n,
         "ttr": round(ttr, 3),
         "rare_word_ratio": round(rare_ratio, 3),
         "char_bigram_entropy_bits": round(H, 3),
         "band": band,
+        "language_scope": "english-prose-only",
         "note": "Proxy only; true perplexity requires an LM (TTR + rare-word ratio + self-entropy).",
     }
 

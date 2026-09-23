@@ -1,7 +1,6 @@
 ---
 name: sepia-opt-perplexity
-description: OPTIONAL sepia add-on. Diagnoses and calibrates a perplexity proxy (lexical surprise via TTR, rare-word ratio, self-entropy) toward the human range. Use only when the user explicitly asks to target GPTZero-style "mixed"/"AI" flags. This skill is OPTIONAL — never auto-load; ask the user before applying.
-version: 0.1.0
+description: OPTIONAL sepia add-on. Estimates a perplexity proxy (lexical surprise via type-token ratio, rare-word ratio, self-entropy) as an editorial lexical-variety diagnostic. Use when the user explicitly asks to assess lexical variety or reduce over-smooth wording. This skill is OPTIONAL — never auto-load; ask the user before applying.
 metadata:
   optional: true
   ask-before-load: true
@@ -12,15 +11,15 @@ metadata:
 > ⚠️ **OPTIONAL SKILL — ASK BEFORE USING.**
 > This skill is **not** part of core sepia and is **not** loaded by default.
 > Before you apply any of its operations, you **MUST** ask the user:
-> *"Enable optional perplexity calibration for this document? It estimates a perplexity proxy and nudges lexical surprise toward the human range; it may or may not change detector scores, and sepia core deliberately does not use this axis."*
+> *"Enable optional lexical-variety assessment for this document? It estimates a perplexity proxy and can suggest more varied wording; sepia core deliberately does not use this axis."*
 > Only proceed if the user says yes. If they decline, do nothing.
 
 # sepia-opt-perplexity (optional)
 
-Detectors such as GPTZero also use **perplexity** (how "surprising" the text is to
-a language model). Human writing is more surprising; AI text is over-smooth and
-predictable. This optional skill estimates a **perplexity proxy** with no external
-model and can calibrate toward a more human lexical profile.
+Prose that is over-smooth and predictable tends to read as machine-written. Human
+writing usually shows more lexical surprise. This optional skill estimates a
+**perplexity proxy** with no external model and reports it as an editorial
+lexical-variety signal.
 
 > **Note:** a true perplexity score needs an LLM API. This skill uses lightweight
 > stylometric proxies — type-token ratio, rare-word ratio against a common-word
@@ -29,8 +28,8 @@ model and can calibrate toward a more human lexical profile.
 
 ## What it does
 - **Diagnose** — run `scripts/measure.py` for TTR, rare-word ratio, self-entropy,
-  and a human-band judgment.
-- **Calibrate** — raise lexical surprise without breaking clarity: replace vague
+  and a variation assessment.
+- **Calibrate** — raise lexical variety without breaking clarity: replace vague
   common words with precise/concrete ones, vary syntax, add specifics.
 
 ## How to run the diagnostic
@@ -47,5 +46,10 @@ model and can calibrate toward a more human lexical profile.
 
 ## Limitations
 - Proxy only; real perplexity requires an LM.
+- The reported bands are descriptive, not validated thresholds. The TTR and
+  rare-word cutoffs are illustrative editorial references, **not** figures
+  derived from this project's corpus.
 - More "surprise" is not always better — over-rare words hurt readability.
-- Does **not** guarantee a detector will stop flagging the text.
+- **English prose only.** Tokenization accepts only `[a-z']+`; non-English text
+  is out of scope for this version.
+- Does **not** guarantee any change in how automated tools score the text.
