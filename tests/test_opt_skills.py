@@ -97,6 +97,21 @@ class BurstinessTests(unittest.TestCase):
         out = burst_measure.analyze("He met Mr. Smith. They left.")
         self.assertEqual(out["sentences"], 2)
 
+    def test_uk_acronym_recognized_two_sentences(self):
+        """'The U.K. is vast. Go.' is two sentences; U.K. is an acronym not present as lowercased in
+        ABBREVIATIONS, so it must be matched case-sensitively against the original token to keep
+        the boundary after it."""
+        out = burst_measure.analyze("The U.K. is vast. Go.")
+        self.assertEqual(out["sentences"], 2)
+
+    def test_title_abbreviation_merge_exempt_from_word_limit(self):
+        """A title abbreviation (Prof.) at the end of a short segment merges with the next word even
+        though it is the only abbreviation; 'Prof. Smith wrote.' is one sentence."""
+        out = burst_measure.analyze("Prof. Smith wrote.")
+        self.assertEqual(out["sentences"], 1)
+        self.assertIn("error", out)
+        self.assertIn(">=2 sentences", out["error"])
+
     def test_two_sentence_extreme_not_highly_variable(self):
         """A two-sentence extreme ratio cannot be called 'highly variable'; the band is withheld."""
         out = burst_measure.analyze(

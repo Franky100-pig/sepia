@@ -27,14 +27,21 @@ ABBREVIATIONS = {
     "inc", "ltd", "co", "e.g", "i.e", "a.m", "p.m", "u.s.a",
 }
 
+# Title abbreviations always attach to the next word, regardless of how long the
+# current segment is. Other abbreviations/acronyms use the short-segment cutoff
+# in _is_short_abbrev_segment so a longer segment ending in one (e.g.
+# "I live in the U.S.A.") still keeps its own sentence boundary.
+TITLE_ABBREVIATIONS = {"dr", "mr", "mrs", "ms", "prof"}
+
 
 def _is_short_abbrev_segment(segment):
-    """Return True for a short (<=3 word) segment ending in a recognized abbreviation.
+    """Return True when a segment ending in an abbreviation should merge with the next.
 
-    A short segment such as "Dr." or "He met Mr." is treated as the start of a
-    sentence whose abbreviation attaches to the next segment ("Dr. Smith"). Longer
-    segments ending in an abbreviation (e.g. "I live in the U.S.A.") are left alone
-    so a following sentence keeps its own boundary.
+    A title abbreviation ("Dr.", "Mr.", "Mrs.", "Ms.", "Prof.") always attaches to
+    the next word, regardless of segment length. Other abbreviations and acronyms
+    (e.g. "U.S.A.", "U.K.", "Inc.") only merge when the segment is short (<=3 words),
+    so a longer segment ending in one (e.g. "I live in the U.S.A.") keeps its own
+    sentence boundary and a following sentence is counted separately.
     """
     words = segment.rstrip().split()
     if not words:
@@ -43,13 +50,17 @@ def _is_short_abbrev_segment(segment):
     if not last.endswith("."):
         return False
     core = last[:-1].lower()
-    if core not in ABBREVIATIONS:
-        # single capital letter (e.g. "U.") or all-caps acronym with periods ("U.S.A.")
-        if not (
-            re.fullmatch(r"[A-Z]\.", core) or re.fullmatch(r"([A-Z]\.)+", core)
-        ):
-            return False
-    return len(words) <= 3
+    is_title = core in TITLE_ABBREVIATIONS
+    if core in ABBREVIATIONS:
+        is_abbrev = True
+    else:
+        # Single capital letter ("U.") or all-caps acronym with periods ("U.K.",
+        # "U.S.A."). Match against the original `last` (uppercase preserved), not the
+        # lowercased `core`, so "U.K." is recognized.
+        is_abbrev = bool(re.fullmatch(r"([A-Z]\.)+", last))
+    if not is_abbrev:
+        return False
+    return is_title or len(words) <= 3
 
 
 def sentences(text):
